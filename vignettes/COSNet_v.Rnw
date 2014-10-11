@@ -1,0 +1,349 @@
+\documentclass[a4paper,11pt]{article}
+
+
+%\VignetteIndexEntry{An R Package for Predicting Binary Labels in Partially-Labeled Graphs}
+%\VignetteDepends{COSNet}
+%\VignetteDepends{bionetdata}
+
+
+\usepackage{amsmath}
+\usepackage[authoryear,round]{natbib}
+\usepackage{hyperref}
+\usepackage{amssymb}
+\newcommand{\Rp}[1]{{\textit{#1}}}
+\newcommand{\bW}{\boldsymbol{W}}
+\newcommand{\bu}{\boldsymbol{u}}
+%\newcommand{\bW}{\boldsymbol{W}}
+\newcommand{\bx}{\boldsymbol{x}}
+\begin{document}
+\title{\Rp{COSNet}: An R Package for Predicting Binary Labels in Partially-Labeled Graphs}
+
+\author{Marco Frasca and Giorgio Valentini}
+
+\maketitle
+
+\begin{center}
+Dipartimento di Informatica\\
+Universit\`a degli Studi di Milano\\
+Via Comelico 39/41, 20135 Milano, Italy\\
+{\tt frasca@di.unimi.it}
+\end{center}
+
+\section*{Scope and Purpose of this Document}
+This document is a user manual for \Rp{COSNet}, the software implementing the model developed by Bertoni {\em et al.} (2011), Frasca {\em et al.} (2013). It provides an introduction into how to use COSNet. Not all features of the R package are
+described in full detail. Such details can be obtained from the documentation enclosed in the R
+package. 
+\tableofcontents
+
+\section{Introduction}
+This package implements the algorithm \Rp{COSNet} (Bertoni \textit{et al. 2011}, Frasca \textit{et al. 2013}), which has been proposed for predicting node labels in partially labeled graphs, especially when labelings are highly unbalanced. In this context, nodes represent the instances of the problem, whose labels can be positive (+) or negative (-). Unbalanced labeling means that one class (usually the negative class) considerably outnumbers the other one. Many real world problems are characterized by few positives and much more negatives, such as the gene function prediction, where genes having the most specific biomolecular functions are very few (Ashburner \textit{et al. 2000}), or in medical diagnosys of  cancer, where patients having a certain cancer (positive class) are the large minority. The instances are only partially labeled, and the aim is to extend the labeling to all the instances. In this context, imbalance-unaware algorithms may suffer high decay in performance when classifying new instances (Ling and Sheng \textit{2007}). \textit{COSNet}  automaticly learns from the input data the model parameters able in dealing with the label imbalance, and efficiently infers binary labels for the unlabeled instances in the graph. 
+
+Formally, the input of \textit{COSNet} is represented by a weighted graph $G=(V, \bW)$, where $V$ is the set of nodes and $\bW = (w_{ij}|_{i,j=1}^n)$ is the symmetric weight matrix with null diagonal: the weight $w_{ij}\in [0,1]$ denotes a similarity index of node $i$ with respect to node $j$. The labeling of $V$ in positive $V_+$ and negative $V_-$ nodes is known only for a subset $S\subset V$, while is unknown for $U=V\setminus S$. The aim is to extend the labeling to nodes in $U$, that is inferring a bipartition of $U$ in positive $U_+$ and negative $U_-$ instances. The labeling imbalance can be represented through a coefficient $\epsilon = |S_+|/|S_-|$, where $S_+$ and $S_-$ are the sets of positive and negative examples, respectively. The labeling is considered highly unbalanced when $\epsilon << 1$. 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{COSNet}
+ \textit{COSNet} is a binary classifier based on a parametric Hopfield network which embeds the partial labeling and node similarities $\bW$ and predict the binary labels for the unlabeled nodes through an asynchronous dynamics, which updates only the unlabeled neurons. In order to deal with label imbalance, the model introduces two parameters, $\alpha \in [0,\frac{\pi}{2}[$ and $\gamma \in \mathbb{R}$, determining respectively the neuron activation values ($\sin\alpha,\ -\cos\alpha$) and the neuron activation thresholds. The parameters are automatically learned by an efficient supervised procedure on the basis of the input data. The initial state for neuron $v \in V$ is set as follows:
+\begin{displaymath}
+x_v(0) = \left\{ \begin{array}{rl}
+\sin\alpha \hspace{0.1cm}& \mbox{\hspace{0.1cm} if \ $v$ is positive labeled}\\
+-\cos\alpha \hspace{0.1cm}& \mbox{\hspace{0.1cm} if \ $v$ is negative labeled}\\
+0 \hspace{0.1cm}& \mbox{\hspace{0.1cm} if \ $v$ is unlabeled}\\
+\end{array}
+\right.
+\label{eq:DHN_update}
+\end{displaymath}
+For each unlabeled node $i$, the initial state $x_i =0 $ is changed to $-\cos\alpha$ or to $\sin\alpha$ according to the following asynchronous dynamics:
+\begin{displaymath}
+\begin{small}
+{\begin{scriptsize} x_i(t)= \end{scriptsize}} \left\{ \begin{array}{rl}
+\sin\alpha &\mbox{if\ } \overset{i-1}{\underset{j=1}\sum} W_{ij}x_j(t) + \overset{n}{\underset{k=i+1}\sum} W_{ik}x_k(t-1) - \gamma > 0\\
+-\cos\alpha &\mbox{if\ } \overset{i-1}{\underset{j=1}\sum} W_{ij}x_j(t) + \overset{n}{\underset{k=i+1}\sum} W_{ik}x_k(t-1) - \gamma \leq 0\\
+\end{array}
+\right.
+\label{eq:HN_U_update}
+\end{small}
+\end{displaymath}
+where $n = |V|$ and $t$ is the current time. 
+At each time $t$, the state of the network is $\bx(t) = (x_1(t), x_2(t), \ldots, x_n(t))$, and a Lyapunov state function named \textit{energy function} is associated to the network:
+
+\begin{displaymath}
+E(\bx) = -\frac{1}{2} \sum_{\substack{i, j=1 \\ j \neq i}}^n{ W_{ij}x_i x_j } + \sum_{i = 1}^{n}{x_i \gamma}
+\label{eq:energy}
+\end{displaymath} 
+The dynamics converges to an equilibrium state $\hat\bx$ corresponding to a minimum of $E$ (Frasca \textit{et.al 2013}), which is used to infer the bipartiton ($U_+, U_-$) of $U$: $U_+ = \{i \in U, \hat x_i = \sin\alpha\}$ and $U_- = \{i \in U, \hat x_i = -\cos\alpha\}$. 
+Furthermore, \textit{COSNet} can been adopted as ranker by assigning to each neuron a score related to its internal energy at equilibrium. More precisely, the score assigned to neuron $i \in U$ is the following:
+\begin{equation}
+s(i) = \sum_{j \neq i} (W_{ij}\hat x_j - \gamma)
+\label{eq:score} 
+\end{equation}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{An Example of the Usage of \Rp{COSNet} for the Functional Classification of Yeast Genes with the Functional Catalogue}
+In this section we apply \Rp{COSNet} to predict the functions of yeast proteins. We adopt a binary protein-protein interactions data set of 2338 yeast proteins from the STRING data base (von Mering et al. 2002), contained in the R package \Rp{bionetdata}\footnote{The package can be downloaded at http://cran.r-project.org/web/packages/bionetdata/index.html.} and the corresponding Functional Catalogue (FunCat) annotations.
+%representing interaction data from yeast two-hybrid assay, mass-spectrometry of purified complexes, correlated mRNA expression and genetic interactions. 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Data Loading}
+First, let us load the library and check the data: 
+\begin{small}
+<<a1>>=
+library(COSNet);
+library(bionetdata)
+data(Yeast.STRING.data)
+dim(Yeast.STRING.data)
+rownames(Yeast.STRING.data)[1:10]
+@
+\end{small}
+The named squared matrix \textit{Yeast.STRING.data} contains 1 in position ($i$, $j$) if the corresponding proteins interact, 0 otherwise. 
+In the same package, in order to define the binary labels, we load the annotations of 176 FunCat classes for the proteins included in \textit{Yeast.STRING.data}. Annotations refer the funcat-2.1 scheme, and funcat-2.1 data 20070316 data, available from the MIPS web site\footnote{http://mips.gsf.de/projects/funcat}. 
+
+<<a2>>=
+data(Yeast.STRING.FunCat)
+dim(Yeast.STRING.FunCat)
+rownames(Yeast.STRING.FunCat)[1:10]
+colnames(Yeast.STRING.FunCat)[1:10]
+@
+
+The number of columns is 177 because the authors added a dummy class "00". Even in this case, \textit{Yeast.STRING.FunCat} is a binary matrix whose $i,j-th$ component is 1 if protein $i$ is annotated with class $j$, 0 otherwise. Note that the row names of both \textit{Yeast.STRING.FunCat} and \textit{Yeast.STRING.data} are identical. We first exclude the dummy class, that is useful only when hierarchical computations are performed, and then we select some classes and, since \Rp{COSNet} needs $\{1, -1\}$-labels, we change each 0-component of \textit{Yeast.STRING.FunCat} to -1.
+
+<<a3>>=
+## excluding the dummy "00" root
+to.be.excl <- which(colnames(Yeast.STRING.FunCat) == "00")
+Yeast.STRING.FunCat <- Yeast.STRING.FunCat[, -to.be.excl]
+## choosing the first 35 classes
+labeling <- Yeast.STRING.FunCat[, 1:35] 
+## number of positive labels
+colSums(labeling)       
+Yeast.STRING.FunCat[Yeast.STRING.FunCat == 0] <- -1
+@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Predicting Labels for Unlabeled Nodes with \Rp{COSNet}}
+Now we predict the node labels through a 5-fold cross validation procedure implemented by the function \texttt{cosnet.cross.validation} provided by the \texttt{COSNet} package. This procedure at each time hides the labels in a fold and predicts them with \Rp{COSNet}. 
+<<a4>>=
+out <- cosnet.cross.validation(labeling, Yeast.STRING.data, 5, cost=0)
+@    
+Note that the \texttt{cost} parameter of \Rp{COSNet} is set to 0: this means that the unregularized version is adopted. 
+Now we test the regularized version of \Rp{COSNet} on the same data:
+
+<<a5>>=     
+out.r <- cosnet.cross.validation(labeling, Yeast.STRING.data, 5, cost=0.0001)
+@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Processing the Results}
+The output of the \texttt{cosnet.cross.validation} function is a list whose fields are: "labels", named matrix containing the input labels; "predictions", named matrix containing the binary predictions; "scores", named matrix containing the predicted scores according to Eq. (\ref{eq:score}).
+<<a6>>=
+predictions <- out$predictions
+scores <- out$scores;
+labels <- out$labels;
+predictions.r <- out.r$predictions
+scores.r <- out.r$scores;
+labels.r <- out.r$labels;
+@
+\subsection{Assessing \Rp{COSNet} Performance}
+We now evaluate the performance of \Rp{COSNet} in terms of F-score, Area under the ROC Curve (AUC) and in terms of Precision at $x$ Recall level (PxR). We use the R package \textit{PerfMeas}, which provides functions to compute the performance measures we need: 
+<<a7>>=
+library(PerfMeas);
+## computing F-score 
+Fs <- F.measure.single.over.classes(labels, predictions);
+## Average F-score 
+Fs$average[4]
+Fs.r <- F.measure.single.over.classes(labels.r, predictions.r);
+# Average F-score for the regularized version of COSNet
+Fs.r$average[4]
+## Computing AUC
+labels[labels <= 0] <- 0;
+labels.r[labels.r <= 0] <- 0;
+auc <- AUC.single.over.classes(labels, scores);
+## AUC averaged across classes
+auc$average
+auc.r <- AUC.single.over.classes(labels.r, scores.r);
+## AUC averaged across classes for the regularized version of COSNet
+auc.r$average
+## Computing precision at different recall levels
+PXR <- precision.at.multiple.recall.level.over.classes(labels, 
+scores, seq(from=0.1, to=1, by=0.1));
+## average PxR
+PXR$avgPXR
+PXR.r <- precision.at.multiple.recall.level.over.classes(labels.r, 
+        scores.r, seq(from=0.1, to=1, by=0.1));
+## average PxR for the regularized version of COSNet
+PXR.r$avgPXR
+@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{An Example of the Usage of \Rp{COSNet} for Inferring Gene Ontology Labels for Fly Genes}
+In this section  we show an application of \Rp{COSNet} in predicting the Gene Ontology (GO)(Ashburner \textit{et al. 2000}) labels for $9361$ Drosophila melanogaster genes. The input similarity matrix is obtained by integrating several types of data, including co-expression, genetic interactions, protein ontologies and physical interactions. The Gene Ontology annotations (release 15-5-13) with $3$-$300$ annotated genes have been considered. Both data and annotations can be downloaded at \textit{http://frasca.di.unimi.it/cosnetdata/}.
+\subsection{Data Loading}
+<<a8>>=
+## reading similarity network W
+W <- 
+as.matrix(read.table(file=paste(sep="", "http://frasca.di.unimi.it/",
+ "cosnetdata/u.sum.fly.txt"), sep=" "))
+## reading GO annotations
+GO.ann.sel <- 
+as.matrix(read.table(file=paste(sep="", "http://frasca.di.unimi.it/",
+"cosnetdata/GO.ann.fly.15.5.13.3_300.txt"), sep = " ",))
+GO.classes <- colnames(GO.ann.sel)
+## changing "." to ":"
+GO.classes <- unlist(lapply(GO.classes, function(x){
+                substr(x, 3, 3) <- ":"; return(x)}))
+colnames(GO.ann.sel) <- GO.classes;      
+@
+\subsection{Predicting GO Labels with \Rp{COSNet}}
+Now we determine a random partition in 3 folds of the input data, hide the labels of the genes in one of these folds (test set), and use the labels in the other 2 folds as training set for \Rp{COSNet}.
+<<a9>>=
+n<-nrow(W);
+## selecting some classes to be predicted
+classes <- c("GO:0009605", "GO:0022414", "GO:0032504",
+            "GO:0002376", "GO:0009888", "GO:0065003");
+labels <- GO.ann.sel[, classes]
+## for COSNet negative labels must be -1
+labels[labels <= 0] <- -1;
+## Determining a random partition for the class GO:0009605 in 3 folds
+##    ensuring that each fold has a similar proportion of positives 
+folds <- find.division.strat(labels[, 1], 1:n, 3)
+## hiding the labels of the test set (the fold of index 1)
+labels[folds[[1]], ] <- 0;
+## predicting the hidden labels for each class with COSNet
+res <- apply(labels, 2, function(x, W, cost){
+        return(COSNet(W, x, cost))},
+        W = W, cost = 0.0001);
+@
+\subsection{Result Evaluation}
+The function \texttt{COSNet} returns a list with five members, including binary predictions, ranking scores, and learned parameters. We now show how to compute, for instance, the AUC and the P10R achieved for the first GO term. Moreover, we show the value learned for the model parameters.
+<<a10>>=
+library(PerfMeas);
+## last predicted term
+term.ind <- 6;
+scores <- res[[term.ind]]$scores;
+test.genes <- names(scores);
+test.labels <- as.vector(GO.ann.sel[test.genes, term.ind]);
+pos.labels <- sum(test.labels > 0)
+pos.labels
+alpha <- res[[term.ind]]$alpha
+gamma <- res[[term.ind]]$c
+alpha
+gamma
+AUC <- AUC.single(scores, test.labels)
+AUC
+P10R <- precision.at.recall.level(scores, test.labels,
+rec.level = 0.1)
+P10R
+@
+%As expected, the value of $\alpha$ is higher when the rate of positives decreases. Indeed, when $\alpha$ tends to $\pi/2$, the ratio $\frac{\sin\alpha}{\cos\alpha}$ gets larger, which means that it is more likely positive neurons propagate their labels during the network dynamics.
+%The fields ``alpha" and ``c" allow to get the estimated values of the parameters $\alpha$, $\gamma$:
+%<<a8>>=
+%out$alpha
+%out$c
+%@  
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Usage of \Rp{COSNet} for Predicting Therapeutical Categories of Drugs}
+This section shows an application of \Rp{COSNet} in predicting drugs categories from DrugBank for 1253 DrugBank
+drugs. The drug similarity matrix and the corresponding labels are available in the R package \Rp{bionetdata}, and contain respectively the Tanimoto chemical structure similarity scores among the considered drugs and the 0/1 labels for 45 drug categories, where in postition $i,j$-th we have the value 1 whether the drug $i$ is associated with the drug category $j$, 0 otherwise.
+\subsection{Loading the data}
+<<a11>>=
+library(bionetdata);
+## similarity matrix DD.chem.data
+data(DD.chem.data); 
+## label matrix DrugBank.Cat
+data(DrugBank.Cat); 
+@
+\subsection{Learning the Model Parameters}
+We show now how to learn the \Rp{COSNet} parameters using the package function \texttt{optimizep}. Fixed one drug category, first of all, we determine a random stratified partition of the data using the function \texttt{find.division.strat} provided by the \Rp{COSNet} package, and then hide the labels of one fold and use the other folds as training set.
+<<a12>>=
+n <- nrow(DD.chem.data);
+drugs <- rownames(DD.chem.data);
+drug.category <- c("Cephalosporins");
+labels <- as.vector(DrugBank.Cat[, drug.category]);
+names(labels) <- rownames(DrugBank.Cat);
+## Determining a random partition in 5 folds ensuring that each 
+##    fold has a similar proportion of positives
+folds <- find.division.strat(labels, 1:n, 5)
+labels[labels <= 0] <- -1;
+## hiding the test labels (the fold of index 1)
+test.drugs <- folds[[1]];
+training.drugs <- setdiff(1:n, test.drugs);
+labels[test.drugs] <- 0;
+@
+Now we need to project the training nodes into a bidimensional space, step necessary for the learning procedure (Frasca \textit{et al. 2013}), and we can do it using the package function \texttt{generate$\_$points}, which returns a list with two fields: \textit{pos$\_$vect}, the named vector of abscissae of projected points and \textit{neg$\_$vect}, the named vector of ordinates of projected points. Then we can call the function \texttt{optimizep} to learn the parameters of the model. 
+<<a13>>=
+points <- generate_points(DD.chem.data, test.drugs, labels);
+str(points)
+opt_parameters <- optimizep(points$pos_vect[training.drugs],
+                points$neg_vect[training.drugs], labels[training.drugs]);
+@ 
+\subsection{Running the Sub-network of Unlabeled Nodes to Infer Labels}
+We now extend the learned parameters to the sub-network of unlabeled nodes and run it with the package function \texttt{runSubnet}.
+<<a14>>=
+## alpha parameter
+alpha <- opt_parameters$alpha;
+## gamma parameter
+gamma <- opt_parameters$c;
+## optimal F-score achieved during learning phase 
+    ## procedure (see Frasca et al. 2013)
+Fscore <- opt_parameters$Fscore;
+res <- runSubnet(DD.chem.data, labels, alpha, gamma, cost=0.035);
+@
+\subsection{Extracting Predictions}
+The output of the \texttt{runSubnet} function is a list with three fields: ``state" which is a named vector containing the binary predictions; ``scores", named vector containing the scores described in Eq. (\ref{eq:score}); ``iter", integer representing the network iterations needed to reach the fixed state. By means of this vectors, we can now compute the prediction performance.
+<<a15>>=
+library(PerfMeas)
+str(res)
+res$iter
+labels <- as.vector(DrugBank.Cat[, drug.category]);
+names(labels) <- rownames(DrugBank.Cat);
+test.names <- names(res$scores);
+AUC <- AUC.single(res$scores, labels[test.names]);
+AUC;
+P10R <- precision.at.recall.level(res$scores, 
+        labels[test.names], rec.level=0.1);
+P10R;
+Fs <- F.measure.single(res$state, labels[test.names]);
+Fs
+@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Cross Validating \Rp{COSNet} in Predicting Drug Therapeutical Categories}
+<<a16>>=
+library(bionetdata);
+data(DD.chem.data); 
+data(DrugBank.Cat); 
+labels <- DrugBank.Cat;
+labels[labels <= 0] <- -1;
+out <- cosnet.cross.validation(labels, DD.chem.data,
+        5, cost=0.035);
+Fs <- F.measure.single.over.classes(labels, out$predictions);
+Fs$average[4];
+labels[labels <= 0] <- 0;
+auc <- AUC.single.over.classes(labels, out$scores);
+auc$average
+PXR <- precision.at.multiple.recall.level.over.classes(labels,
+        out$scores, seq(from=0.1, to=1, by=0.1));
+PXR$avgPXR
+@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{thebibliography}{}
+\bibitem[\protect\citeauthoryear{Bertoni et al.}{2011}]{Bertoni11}
+Bertoni, A., Frasca, M., Valentini, G. (2011).
+\newblock COSNet: A Cost Sensitive Neural Network for Semi-supervised Learning in Graphs.
+{\it ECML/PKDD (1)} {\bf 6911}, 219-234.
+
+\bibitem[\protect\citeauthoryear{Frasca {\em et~al.}}(2013)]{Frasca13}
+Frasca, M., Bertoni, A., and Valentini, G. (2013).
+\newblock A neural network algorithm for semi-supervised node label learning
+  from unbalanced data.
+{\it Neural Networks\/}, {\bf 43}(0), 84 -- 98.
+
+\bibitem[\protect\citeauthoryear{von Mering et al.}{2002}]{vonMering02}
+Von Mering, C., Krause, R., Snel, B., Cornell, M., Oliver, S., Fields, S., and Bork, P. (2002).
+\newblock  Comparative assessment of large-scale data sets of protein-protein interactions.
+{\it Nature} {\bf 417} 399-403.
+
+\bibitem[\protect\citeauthoryear{Ashburner, M. et~al}{2000}]{GO00}
+Ashburner, M. et al. (2000), 
+\newblock Gene ontology: tool for the unification of biology. The
+  Gene Ontology Consortium.
+{\it Nature genetics\/} \textbf{25}~(1) 25--29.
+
+\bibitem[\protect\citeauthoryear{Ling and Sheng}{2007}]{Ling07}
+Ling, C. X. and Sheng, V. S. (2007).
+\newblock {Cost-sensitive Learning and the Class Imbalanced Problem\/}.
+
+\end{thebibliography}
+\end{document}

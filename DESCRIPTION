@@ -1,0 +1,15 @@
+Package: COSNet
+Type: Package
+Title: COSNet: Cost-Senstitive network for node label prediction
+Version: 0.99.6
+Date: 2014-10-05
+Author: Marco Frasca, Giorgio Valentini -- Universita' degli Studi di
+        Milano
+Maintainer: Marco Frasca<frasca@di.unimi.it>
+Description: Package that implements the COSNet classification
+        algorithm. The algorithm predicts node labels in partially
+        labeled graphs.
+License: GPL (>= 2)
+LazyLoad: yes
+Suggests: bionetdata, PerfMeas, RUnit, BiocGenerics
+biocViews: GraphAndNetwork, Classification,Network, NeuralNetwork
