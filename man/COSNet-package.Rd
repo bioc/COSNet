@@ -12,8 +12,8 @@ node labels in a semi-supervised setting.
 \tabular{ll}{
 Package: \tab COSNet\cr
 Type: \tab Package\cr
-Version: \tab 0.99.6\cr
-Date: \tab 2014-10-05\cr
+Version: \tab 1.3.1\cr
+Date: \tab 2015-05-06\cr
 License: \tab GPL (>= 2) \cr
 LazyLoad: \tab yes\cr
 }

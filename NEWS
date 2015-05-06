@@ -1,13 +1,17 @@
-CHANGES IN VERSION 0.99.5
+CHANGES IN VERSION 1.3.1
 ----------------------
-- Modified the Section 1 of vignettes.
+- Modified the file find.division.strat.R at line 24. The first parameter of the 
+  call of function find.division.not.strat must be 1:n and not n as in the
+  previous version.
 
 USER VISIBLE CHANGES
 
     
 
 BUG FIXES
-
+The previous version of the function find.division.strat produced an error in the
+ case the number of positives for the current class was lower than the
+  number of folds chosen for the k-folds cross validation.
     
 
 PLANS

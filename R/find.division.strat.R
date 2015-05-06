@@ -21,7 +21,7 @@ function(labels, vett, n_fold)
 			                              vett.pos[(kp*(n_fold-1)+1):npos]);		
 		}
 		else # not stratified 
-			fold_indices <- find.division.not.strat(n, n_fold)
+			fold_indices <- find.division.not.strat(1:n, n_fold)
 
 		return (fold_indices);	
 	}
