@@ -1,7 +1,7 @@
 \name{COSNet}
 \alias{COSNet}
 \title{
-COSNet: Cost-Senstitive network for node label prediction
+Cost Sensitive Network for node label prediction on graphs with highly unbalanced labelings
 }
 \description{
 This function realizes the COSNet algorithm (Frasca et al. 2013). COSNet is a semi-supervised algorithm based on parametric Hopfield networks for predicting labels for unlabeled nodes in graphs which are only partially labeled.  
