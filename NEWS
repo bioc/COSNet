@@ -1,17 +1,13 @@
-CHANGES IN VERSION 1.3.1
+CHANGES IN VERSION 1.3.2
 ----------------------
-- Modified the file find.division.strat.R at line 24. The first parameter of the 
-  call of function find.division.not.strat must be 1:n and not n as in the
-  previous version.
+- Modified the field title in the files COSNet.Rd, COSNet-package.Rd and DESCRIPTION. 
 
 USER VISIBLE CHANGES
 
     
 
 BUG FIXES
-The previous version of the function find.division.strat produced an error in the
- case the number of positives for the current class was lower than the
-  number of folds chosen for the k-folds cross validation.
+
     
 
 PLANS

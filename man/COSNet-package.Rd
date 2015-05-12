@@ -2,22 +2,22 @@
 \alias{COSNet-package}
 \docType{package}
 \title{
-COSNet: Binary classifier for node classification in partially labeled graphs.
+COSNet: Binary classifier for node classification on partially labeled graphs with unbalanced labels.
 }
 \description{
-Algorithm based on cost-senstitive neural network for predicting 
+Algorithm based on cost-sensitive neural network for predicting 
 node labels in a semi-supervised setting.  
 }
 \details{
 \tabular{ll}{
 Package: \tab COSNet\cr
 Type: \tab Package\cr
-Version: \tab 1.3.1\cr
-Date: \tab 2015-05-06\cr
+Version: \tab 1.3.2\cr
+Date: \tab 2015-05-12\cr
 License: \tab GPL (>= 2) \cr
 LazyLoad: \tab yes\cr
 }
-This package implements the COSNet algorithm (Frasca et al. 2013). COSNet is a semi-supervised cost-senstitive neural network for predicting 
+This package implements the COSNet algorithm (Frasca et al. 2013). COSNet is a semi-supervised cost-sensitive neural network for predicting 
 node labels in partially labeled graphs. The algorithm is able in inferring a labeling for unlabeled nodes in the graph starting from the graph topology and the known labels.
 }
 \author{
