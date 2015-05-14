@@ -2,7 +2,7 @@
 \alias{COSNet-package}
 \docType{package}
 \title{
-COSNet: Binary classifier for node classification on partially labeled graphs with unbalanced labels.
+R package for binary classification and node ranking on partially labeled graphs with unbalanced labels.
 }
 \description{
 Algorithm based on cost-sensitive neural network for predicting 
@@ -12,8 +12,8 @@ node labels in a semi-supervised setting.
 \tabular{ll}{
 Package: \tab COSNet\cr
 Type: \tab Package\cr
-Version: \tab 1.3.2\cr
-Date: \tab 2015-05-12\cr
+Version: \tab 1.3.3\cr
+Date: \tab 2015-05-14\cr
 License: \tab GPL (>= 2) \cr
 LazyLoad: \tab yes\cr
 }
