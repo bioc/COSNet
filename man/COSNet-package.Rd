@@ -12,8 +12,8 @@ node labels in a semi-supervised setting.
 \tabular{ll}{
 Package: \tab COSNet\cr
 Type: \tab Package\cr
-Version: \tab 1.3.3\cr
-Date: \tab 2015-05-14\cr
+Version: \tab 1.5.1\cr
+Date: \tab 2015-11-02\cr
 License: \tab GPL (>= 2) \cr
 LazyLoad: \tab yes\cr
 }
@@ -36,6 +36,8 @@ Maintainer:
 
 \references{
 Frasca M., Bertoni A., Re M., Valentini G.: A neural network algorithm for semi-supervised node label learning from unbalanced data. Neural Networks, Volume 43, July, 2013 Pages 84-98.
+
+Bertoni A., Frasca M., Valentini G.: COSNet: a Cost Sensitive Neural Network for Semi-supervised Learning in Graphs. ECML PKDD'11 Proceedings of the 2011 European conference on Machine learning and knowledge discovery in databases - Volume Part I. Pages 219-234 
 }
 
 \keyword{ package }

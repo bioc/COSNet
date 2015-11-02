@@ -1,8 +1,6 @@
-CHANGES IN VERSION 1.3.2
+CHANGES IN VERSION 1.5.1
 ----------------------
-- Modified the fields title and description of the file DESCRIPTION to cerrect the title 
-  in the citation of the package.
-- Modified the field title of the file COSNet-package.Rd 
+- Added the URL field in description file to link the corresponfing GitHub data
 
 USER VISIBLE CHANGES
 
