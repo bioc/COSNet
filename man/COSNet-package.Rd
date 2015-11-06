@@ -13,7 +13,7 @@ node labels in a semi-supervised setting.
 Package: \tab COSNet\cr
 Type: \tab Package\cr
 Version: \tab 1.5.1\cr
-Date: \tab 2015-11-02\cr
+Date: \tab 2015-11-06\cr
 License: \tab GPL (>= 2) \cr
 LazyLoad: \tab yes\cr
 }
