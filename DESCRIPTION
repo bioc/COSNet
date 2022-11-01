@@ -1,7 +1,7 @@
 Package: COSNet
 Type: Package
 Title: Cost Sensitive Network for node label prediction on graphs with highly unbalanced labelings
-Version: 1.32.0
+Version: 1.33.0
 Date: 2015-11-06
 Author: Marco Frasca and Giorgio Valentini -- Universita' degli Studi di
         Milano
